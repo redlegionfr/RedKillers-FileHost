@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>File Upload</title>
+<style>
+    #file-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 20px;
+    }
+    .file-item {
+        text-align: center;
+        cursor: pointer;
+    }
+    .file-icon {
+        width: 50px;
+        height: 50px;
+        background-color: #000000;
+        border: 2px solid #800000;
+        border-radius: 5px;
+        margin-bottom: 5px;
+    }
+    .file-name {
+        font-size: 14px;
+    }
+    #cursor-dot {
+        width: 30px; /* 3 times bigger */
+        height: 30px; /* 3 times bigger */
+        background-color: rgba(50, 50, 50, 0.4); /* Dark gray with 40% transparency */
+        border-radius: 50%;
+        position: fixed;
+        z-index: 9999;
+        pointer-events: none;
+    }
+</style>
+</head>
+<body>
+
+<input type="file" id="file-input" multiple>
+<button onclick="uploadFiles()">Upload Files</button>
+
+<div id="file-list"></div>
+
+<div id="cursor-dot"></div>
+
+<script src="snow.js"></script>
+<script>
+    // Function to handle file upload
+    function uploadFiles() {
+        const fileInput = document.getElementById('file-input');
+        const fileList = document.getElementById('file-list');
+
+        for (let i = 0; i < fileInput.files.length; i++) {
+            const file = fileInput.files[i];
+            const fileItem = document.createElement('div');
+            fileItem.classList.add('file-item');
+            const fileIcon = document.createElement('div');
+            fileIcon.classList.add('file-icon');
+            fileItem.appendChild(fileIcon);
+            const fileName = document.createElement('div');
+            fileName.classList.add('file-name');
+            fileName.textContent = file.name;
+            fileItem.appendChild(fileName);
+            fileList.appendChild(fileItem);
+
+            // Save uploaded file object to local storage
+            const uploadedFiles = JSON.parse(localStorage.getItem('uploadedFiles')) || [];
+            uploadedFiles.push(file);
+            localStorage.setItem('uploadedFiles', JSON.stringify(uploadedFiles));
+
+            // Attach click event listener to download file when clicked
+            fileItem.addEventListener('click', function() {
+                downloadFile(file);
+            });
+        }
+    }
+
+    // Function to download file
+    function downloadFile(file) {
+        const url = URL.createObjectURL(file);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = file.name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => {
+            URL.revokeObjectURL(url);
+        }, 0);
+    }
+
+    // Function to load all uploaded files from local storage
+    function loadAllUploadedFiles() {
+        const uploadedFiles = JSON.parse(localStorage.getItem('uploadedFiles'));
+        const fileList = document.getElementById('file-list');
+
+        if (uploadedFiles) {
+            uploadedFiles.forEach(file => {
+                const fileItem = document.createElement('div');
+                fileItem.classList.add('file-item');
+                const fileIcon = document.createElement('div');
+                fileIcon.classList.add('file-icon');
+                fileItem.appendChild(fileIcon);
+                const fileNameElem = document.createElement('div');
+                fileNameElem.classList.add('file-name');
+                fileNameElem.textContent = file.name;
+                fileItem.appendChild(fileNameElem);
+                fileList.appendChild(fileItem);
+                fileItem.addEventListener('click', function() {
+                    downloadFile(file);
+                });
+            });
+        }
+    }
+
+    // Function to follow cursor with delay
+    function followCursor(event) {
+        const cursorDot = document.getElementById('cursor-dot');
+        const delay = 0.1; // Delay in seconds
+
+        // Apply delay effect
+        setTimeout(() => {
+            cursorDot.style.left = event.pageX + 'px';
+            cursorDot.style.top = event.pageY + 'px';
+        }, delay * 1000);
+    }
+
+    // Attach event listener to follow cursor
+    document.addEventListener('mousemove', followCursor);
+
+    // Load all uploaded files when the page is loaded
+    window.onload = function() {
+        setBackground();
+        loadAllUploadedFiles();
+    };
+</script>
+
+</body>
+</html>
